@@ -1,8 +1,8 @@
 // ==UserScript==
-// @name         Elethor Fossil Reorder with Button Bar
+// @name         Elethor Fossil Reorder with Button
 // @namespace    http://tampermonkey.net/
-// @version      0.6
-// @description  Adds a button in a bar at the top of the page to reorder fossils by preservation stat in Elethor game, shifting the page content down, and removes the bar when not on the fossils page.
+// @version      0.8
+// @description  Adds a button under the "MY FOSSILS" heading to reorder fossils by preservation stat in Elethor game, and removes it when not on the fossils page.
 // @author       You
 // @match        https://elethor.com/*
 // @grant        GM_xmlhttpRequest
@@ -12,31 +12,26 @@
 (function() {
     'use strict';
 
-    // Function to create and insert the button bar
-    function addButtonBar() {
-        if (document.querySelector('#fossil-reorder-bar')) return;
+    // Function to create and insert the button
+    function addButton() {
+        if (document.querySelector('#fossil-reorder-button')) return;
 
-        // Create a bar to contain the button
-        const bar = document.createElement('div');
-        bar.id = 'fossil-reorder-bar';
-        bar.style.width = '100%';
-        bar.style.backgroundColor = '#f1f1f1';
-        bar.style.padding = '10px';
-        bar.style.boxShadow = '0px 4px 2px -2px gray';
-        bar.style.position = 'relative';
-        bar.style.zIndex = 1000;
+        // Find the "MY FOSSILS" heading
+        const heading = Array.from(document.querySelectorAll('h4.title.is-4.mb-0')).find(h => h.textContent.trim() === 'MY FOSSILS');
+        if (!heading) {
+            console.log('Heading "MY FOSSILS" not found.');
+            return;
+        }
 
         // Create the button
         const button = document.createElement('button');
         button.textContent = 'Reorder Fossils by Preservation';
-        button.style.padding = '10px 20px';
-        button.style.fontSize = '16px';
+        button.id = 'fossil-reorder-button';
+        button.className = 'button is-info is-small';
+        button.style.marginTop = '10px';
 
-        // Add the button to the bar
-        bar.appendChild(button);
-
-        // Insert the bar at the top of the body
-        document.body.insertBefore(bar, document.body.firstChild);
+        // Add the button after the heading
+        heading.parentNode.insertBefore(button, heading.nextSibling);
 
         // Button click event handler
         button.addEventListener('click', function() {
@@ -95,11 +90,11 @@
         });
     }
 
-    // Function to remove the button bar
-    function removeButtonBar() {
-        const bar = document.querySelector('#fossil-reorder-bar');
-        if (bar) {
-            bar.remove();
+    // Function to remove the button
+    function removeButton() {
+        const button = document.querySelector('#fossil-reorder-button');
+        if (button) {
+            button.remove();
         }
     }
 
@@ -115,13 +110,14 @@
         return matches ? decodeURIComponent(matches[1]) : undefined;
     }
 
-    // Function to observe page changes and manage the button bar
+    // Function to observe page changes and manage the button
     function observePageChanges() {
         const observer = new MutationObserver(() => {
+            console.log('Page change detected.');
             if (window.location.pathname === '/mine/fossils') {
-                addButtonBar();
+                addButton();
             } else {
-                removeButtonBar();
+                removeButton();
             }
         });
 
@@ -130,4 +126,11 @@
 
     // Start observing page changes
     observePageChanges();
+
+    // Initial check to handle page load
+    document.addEventListener('DOMContentLoaded', function() {
+        if (window.location.pathname === '/mine/fossils') {
+            addButton();
+        }
+    });
 })();
