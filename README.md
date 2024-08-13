@@ -1,5 +1,6 @@
 # elefossilreorder
 Reorders fossils on elethor page by preservation stat
+
 To use:
 Install tampermonkey extension for chrome
 Paste code into tampermonkey as a new userscript
