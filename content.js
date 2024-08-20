@@ -1,8 +1,8 @@
 (function() {
     'use strict';
 
-    function addButton() {
-        if (document.querySelector('#fossil-reorder-button')) return;
+    function addButton(id, text, modifierName) {
+        if (document.querySelector(`#${id}`)) return;
 
         const heading = Array.from(document.querySelectorAll('h4.title.is-4.mb-0')).find(h => h.textContent.trim() === 'MY FOSSILS');
         if (!heading) {
@@ -11,67 +11,77 @@
         }
 
         const button = document.createElement('button');
-        button.textContent = 'Reorder Fossils by Preservation';
-        button.id = 'fossil-reorder-button';
+        button.textContent = text;
+        button.id = id;
         button.className = 'button is-info is-small';
         button.style.marginTop = '10px';
 
         heading.parentNode.insertBefore(button, heading.nextSibling);
 
+        const lineBreak = document.createElement('br');
+        heading.parentNode.insertBefore(lineBreak, button.nextSibling);
+
         button.addEventListener('click', function() {
-            fetch('/game/fossils', {
-                method: 'GET',
-                headers: {
-                    'Accept': 'application/json, text/plain, */*',
-                    'X-Requested-With': 'XMLHttpRequest'
-                },
-                credentials: 'same-origin'
-            })
-            .then(response => response.json())
-            .then(data => {
-                let fossils = data.fossils;
-                fossils.sort((a, b) => {
-                    let preservationA = getModifierValue(a, 'preservation');
-                    let preservationB = getModifierValue(b, 'preservation');
-                    return preservationB - preservationA;
-                });
-
-                fossils.forEach((fossil, index) => {
-                    fossil.order = index + 1;
-                });
-
-                let postData = JSON.stringify({ fossils: fossils });
-
-                fetch('/game/fossils/order', {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json;charset=UTF-8',
-                        'X-Requested-With': 'XMLHttpRequest',
-                        'X-XSRF-TOKEN': getCookieValue('XSRF-TOKEN')
-                    },
-                    credentials: 'same-origin',
-                    body: postData
-                })
-                .then(response => response.json())
-                .then(data => {
-                    console.log('Fossils reordered successfully.');
-                    location.reload();
-                })
-                .catch(error => {
-                    console.error('Error in POST request:', error);
-                });
-            })
-            .catch(error => {
-                console.error('Error fetching fossils data:', error);
-            });
+            reorderFossils(modifierName);
         });
     }
 
-    function removeButton() {
-        const button = document.querySelector('#fossil-reorder-button');
-        if (button) {
-            button.remove();
-        }
+    function reorderFossils(modifierName) {
+        fetch('/game/fossils', {
+            method: 'GET',
+            headers: {
+                'Accept': 'application/json, text/plain, */*',
+                'X-Requested-With': 'XMLHttpRequest'
+            },
+            credentials: 'same-origin'
+        })
+        .then(response => response.json())
+        .then(data => {
+            let fossils = data.fossils;
+            fossils.sort((a, b) => {
+                let valueA = getModifierValue(a, modifierName);
+                let valueB = getModifierValue(b, modifierName);
+                return valueB - valueA;
+            });
+
+            fossils.forEach((fossil, index) => {
+                fossil.order = index + 1;
+            });
+
+            let postData = JSON.stringify({ fossils: fossils });
+
+            fetch('/game/fossils/order', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json;charset=UTF-8',
+                    'X-Requested-With': 'XMLHttpRequest',
+                    'X-XSRF-TOKEN': getCookieValue('XSRF-TOKEN')
+                },
+                credentials: 'same-origin',
+                body: postData
+            })
+            .then(response => response.json())
+            .then(data => {
+                console.log('Fossils reordered successfully.');
+                location.reload();
+            })
+            .catch(error => {
+                console.error('Error in POST request:', error);
+            });
+        })
+        .catch(error => {
+            console.error('Error fetching fossils data:', error);
+        });
+    }
+
+    function removeButtons() {
+        const buttons = ['#fossil-reorder-button', '#geodata-reorder-button', '#xp-reorder-button'];
+        buttons.forEach(buttonId => {
+            const button = document.querySelector(buttonId);
+            if (button) {
+                button.remove();
+            }
+        });
     }
 
     function getModifierValue(fossil, modifierName) {
@@ -88,9 +98,11 @@
         const observer = new MutationObserver(() => {
             console.log('Page change detected.');
             if (window.location.pathname === '/mine/fossils') {
-                addButton();
+                addButton('fossil-reorder-button', 'Reorder Fossils by Preservation', 'preservation');
+                addButton('geodata-reorder-button', 'Reorder Fossils by Geodata', 'geodata_drop_rate');
+                addButton('xp-reorder-button', 'Reorder Fossils by Experience', 'experience');
             } else {
-                removeButton();
+                removeButtons();
             }
         });
 
@@ -101,7 +113,9 @@
 
     document.addEventListener('DOMContentLoaded', function() {
         if (window.location.pathname === '/mine/fossils') {
-            addButton();
+            addButton('fossil-reorder-button', 'Reorder Fossils by Preservation', 'preservation');
+            addButton('geodata-reorder-button', 'Reorder Fossils by Geodata', 'geodata_drop_rate');
+            addButton('xp-reorder-button', 'Reorder Fossils by Experience', 'experience');
         }
     });
 })();
