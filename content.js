@@ -1,3 +1,14 @@
+// ==UserScript==
+// @name         Elethor Fossil Reorder
+// @namespace    http://tampermonkey.net/
+// @version      1.1
+// @description  Order fossils by experience, geodata and preservation.
+// @author       Original- Starcore , Forked by Eugene
+// @match        https://elethor.com/*
+// @icon         https://www.google.com/s2/favicons?sz=64&domain=tampermonkey.net
+// @grant        none
+// ==/UserScript==
+
 (function() {
     'use strict';
 
