@@ -1,7 +1,7 @@
 (function() {
     'use strict';
 
-    function addButton(id, text, modifierName) {
+    function addButton(id, text, modifierName, reverse = false) {
         if (document.querySelector(`#${id}`)) return;
 
         const heading = Array.from(document.querySelectorAll('h4.title.is-4.mb-0')).find(h => h.textContent.trim() === 'MY FOSSILS');
@@ -22,11 +22,11 @@
         heading.parentNode.insertBefore(lineBreak, button.nextSibling);
 
         button.addEventListener('click', function() {
-            reorderFossils(modifierName);
+            reorderFossils(modifierName, reverse);
         });
     }
 
-    function reorderFossils(modifierName) {
+    function reorderFossils(modifierName, reverse = false) {
         fetch('/game/fossils', {
             method: 'GET',
             headers: {
@@ -41,7 +41,15 @@
             fossils.sort((a, b) => {
                 let valueA = getModifierValue(a, modifierName);
                 let valueB = getModifierValue(b, modifierName);
-                return valueB - valueA;
+
+                // Apply "no preservation fossils first" only for reverse sort
+                if (reverse) {
+                    if (valueA === 0 && valueB !== 0) return -1;
+                    if (valueB === 0 && valueA !== 0) return 1;
+                }
+
+                // Apply sorting by preservation, either high-to-low or low-to-high
+                return reverse ? valueA - valueB : valueB - valueA;
             });
 
             fossils.forEach((fossil, index) => {
@@ -75,7 +83,7 @@
     }
 
     function removeButtons() {
-        const buttons = ['#fossil-reorder-button', '#geodata-reorder-button', '#xp-reorder-button'];
+        const buttons = ['#fossil-reorder-button', '#fossil-reorder-button-reverse', '#geodata-reorder-button', '#xp-reorder-button'];
         buttons.forEach(buttonId => {
             const button = document.querySelector(buttonId);
             if (button) {
@@ -99,6 +107,7 @@
             console.log('Page change detected.');
             if (window.location.pathname === '/mine/fossils') {
                 addButton('fossil-reorder-button', 'Reorder Fossils by Preservation', 'preservation');
+                addButton('fossil-reorder-button-reverse', 'Reorder Fossils by Preservation (Reverse)', 'preservation', true);
                 addButton('geodata-reorder-button', 'Reorder Fossils by Geodata', 'geodata_drop_rate');
                 addButton('xp-reorder-button', 'Reorder Fossils by Experience', 'experience');
             } else {
@@ -114,6 +123,7 @@
     document.addEventListener('DOMContentLoaded', function() {
         if (window.location.pathname === '/mine/fossils') {
             addButton('fossil-reorder-button', 'Reorder Fossils by Preservation', 'preservation');
+            addButton('fossil-reorder-button-reverse', 'Reorder Fossils by Preservation (Reverse)', 'preservation', true);
             addButton('geodata-reorder-button', 'Reorder Fossils by Geodata', 'geodata_drop_rate');
             addButton('xp-reorder-button', 'Reorder Fossils by Experience', 'experience');
         }
