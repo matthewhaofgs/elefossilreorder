@@ -1,15 +1,16 @@
 {
   "manifest_version": 3,
   "name": "Elethor Fossil Reorder Button",
-  "version": "1.0",
+  "version": "1.3",
   "description": "Adds a button to reorder fossils by preservation stat in Elethor game.",
   "permissions": [
-    "activeTab",
-    "scripting"
   ],
   "content_scripts": [
     {
-      "matches": ["https://elethor.com/*"],
+       "matches": [
+        "https://elethor.com/*",
+        "https://www.elethor.com/*"
+      ],
       "js": ["content.js"],
       "run_at": "document_end"
     }
